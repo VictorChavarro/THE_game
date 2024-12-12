@@ -4,9 +4,12 @@
 #include "HatsuneMiku.h" // Archivo con la imagen de Miku en formato monocromático
 
 // Pines para el display
-#define TFT_CS 6
 #define TFT_DC 7
+#define TFT_CS 6
+#define TFT_MOSI 11
+#define TFT_CLK 13
 #define TFT_RST 10
+#define TFT_MISO 12
 
 // Botones
 #define BUTTON_RIGHT 20
@@ -17,13 +20,13 @@
 #define BUZZER_PIN 9
 
 // Configuración del display
-Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
+Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);
 
 // Variables de Miku
 int MikuX = 0; // Posición inicial en la esquina inferior izquierda
 int MikuY = 292; // Ajustado para que esté sobre los bloques inferiores
-const int MikuWidth = 23;
-const int MikuHeight = 28;
+const int MikuWidth = 28;
+const int MikuHeight = 23;
 bool MikuJumping = false;
 int MikuJumpHeight = 0;
 bool MikuOnPlatform = false;
@@ -69,11 +72,11 @@ void playAmbientSound() {
 
 // Funciones para dibujar elementos
 void drawBackground() {
-  tft.drawBitmap(0, 0, TTM, 240, 320, ILI9341_WHITE);
+  tft.drawBitmap(0, 0, TTM, 200, 200, ILI9341_WHITE);
 }
 
 void drawMiku() {
-  tft.drawBitmap(MikuX, MikuY, Miku, MikuWidth, MikuHeight, ILI9341_BLUE);
+  tft.drawBitmap(0, 0, Miku, MikuWidth, MikuHeight, ILI9341_BLUE);
 }
 
 void clearMiku() {
@@ -130,6 +133,10 @@ void setup() {
   tft.fillScreen(ILI9341_BLACK);
   drawBackground();
   drawPlatforms();
+
+  //tft.setCursor(0, 0);
+  //tft.print("prueba");
+
 
   // Configurar pines de botones
   pinMode(BUTTON_RIGHT, INPUT_PULLUP);
