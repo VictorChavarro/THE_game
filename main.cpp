@@ -24,7 +24,7 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_R
 
 // Variables de Miku
 int MikuX = 0; // Posición inicial en la esquina inferior izquierda
-int MikuY = 0; // Ajustado para que esté sobre los bloques inferiores
+int MikuY = 200; // Ajustado para que esté sobre los bloques inferiores
 const int MikuWidth = 28;
 const int MikuHeight = 23;
 bool MikuJumping = false;
