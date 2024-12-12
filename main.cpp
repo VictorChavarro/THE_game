@@ -24,7 +24,7 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_R
 
 // Variables de Miku
 int MikuX = 0; // Posición inicial en la esquina inferior izquierda
-int MikuY = 292; // Ajustado para que esté sobre los bloques inferiores
+int MikuY = 10; // Ajustado para que esté sobre los bloques inferiores
 const int MikuWidth = 28;
 const int MikuHeight = 23;
 bool MikuJumping = false;
@@ -37,15 +37,19 @@ struct Platform {
 };
 
 const Platform platforms[] PROGMEM = {
-  {0, 292, 240, 28} // Plataforma sólida en la parte inferior (todo el ancho de la base)
+  {0, 240, 200, 28},  // Plataforma sólida en la parte inferior (todo el ancho de la base)
+  {50, 140, 60, 10},  // Plataforma intermedia izquierda
+  {100, 100, 80, 10}, // Plataforma intermedia derecha
+  {70, 50, 50, 10}    // Plataforma superior central
 };
 const int platformCount = sizeof(platforms) / sizeof(Platform);
 
-// Tonos ambientales generados a partir del archivo de audio
+// Notas para el sonido ambiental
 const int ambientSound[][2] = {
-  {97, 250},  {195, 250}, {698, 250}, {110, 250},
-  {130, 250}, {195, 250}, {130, 250}, {195, 250},
-  {146, 250}, {220, 250}  // Secuencia simplificada de tonos
+  {262, 300}, // C4
+  {294, 300}, // D4
+  {330, 300}, // E4
+  {294, 300}  // D4
 };
 const int ambientSize = sizeof(ambientSound) / sizeof(ambientSound[0]);
 
@@ -71,16 +75,16 @@ void playAmbientSound() {
 }
 
 // Funciones para dibujar elementos
-void drawBackground() {
-  tft.drawBitmap(0, 0, TTM, 200, 200, ILI9341_WHITE);
+void drawBackgroundSection(int x, int y, int width, int height) {
+  tft.drawBitmap(x, y, TTM + (y * 240 + x), width, height, ILI9341_WHITE);
 }
 
 void drawMiku() {
-  tft.drawBitmap(0, 0, Miku, MikuWidth, MikuHeight, ILI9341_BLUE);
+  tft.drawBitmap(MikuX, MikuY, Miku, MikuWidth, MikuHeight, ILI9341_BLUE);
 }
 
 void clearMiku() {
-  tft.fillRect(MikuX, MikuY, MikuWidth, MikuHeight, ILI9341_BLACK);
+  drawBackgroundSection(MikuX, MikuY, MikuWidth, MikuHeight);
 }
 
 void drawPlatforms() {
@@ -117,7 +121,7 @@ void handleMikuJump() {
     if (MikuJumpHeight >= 50) { // Altura máxima del salto
       MikuJumping = false;
     }
-  } else if (!MikuOnPlatform && MikuY < 292) {
+  } else if (!MikuOnPlatform && MikuY < 240 - MikuHeight) {
     MikuY += 5; // Gravedad
   }
 }
@@ -129,14 +133,10 @@ void setup() {
 
   // Inicializar display
   tft.begin();
-  tft.setRotation(1);
+  tft.setRotation(0); // Cambiar orientación a vertical
   tft.fillScreen(ILI9341_BLACK);
-  drawBackground();
+  tft.drawBitmap(0, 0, TTM, 200, 240, ILI9341_WHITE);
   drawPlatforms();
-
-  //tft.setCursor(0, 0);
-  //tft.print("prueba");
-
 
   // Configurar pines de botones
   pinMode(BUTTON_RIGHT, INPUT_PULLUP);
@@ -157,19 +157,21 @@ void loop() {
 
   // Leer botones
   if (digitalRead(BUTTON_RIGHT) == LOW) {
-    MikuX += 5;
-    if (MikuX + MikuWidth > 240) {
-      MikuX = 240 - MikuWidth; // Mantener dentro del límite derecho
+    MikuX += 2;
+    if (MikuX > 200 - MikuWidth) {
+      MikuX = 200 - MikuWidth; // Límite derecho
     }
     Serial.println("Miku se mueve a la derecha");
   }
+
   if (digitalRead(BUTTON_LEFT) == LOW) {
-    MikuX -= 5;
+    MikuX -= 2;
     if (MikuX < 0) {
-      MikuX = 0; // Mantener dentro del límite izquierdo
+      MikuX = 0; // Límite izquierdo
     }
     Serial.println("Miku se mueve a la izquierda");
   }
+
   if (digitalRead(BUTTON_JUMP) == LOW && !MikuJumping && MikuOnPlatform) {
     MikuJumping = true;
     MikuJumpHeight = 0;
@@ -178,8 +180,9 @@ void loop() {
 
   handleMikuJump();
   checkMikuPlatformCollision();
-  drawMiku();
 
-  // Reproducir sonido ambiental
+  drawMiku();
   playAmbientSound();
+
+  delay(30);
 }
